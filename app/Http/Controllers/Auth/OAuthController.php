@@ -47,8 +47,12 @@ class OAuthController extends Controller
         
         $url = $providerUrl . '/oauth/authorize?' . http_build_query($params);
         
-        // Log the URL for debugging (remove in production)
-        \Log::info('OAuth redirect URL: ' . $url);
+        // Log for debugging (without sensitive data)
+        \Log::info('OAuth authorization redirect', [
+            'provider_url' => $providerUrl,
+            'redirect_uri' => $redirectUri,
+            'client_id_preview' => substr($clientId, 0, 10) . '...',
+        ]);
         
         return redirect($url);
     }
@@ -66,17 +70,51 @@ class OAuthController extends Controller
             return redirect('/login')->with('error', 'Authorization failed');
         }
         
-        // Exchange code for token
-        $response = Http::asForm()->post(config('services.oauth.provider_url') . '/oauth/token', [
-            'grant_type' => 'authorization_code',
-            'client_id' => config('services.oauth.client_id'),
-            'client_secret' => config('services.oauth.client_secret'),
-            'code' => $code,
-            'redirect_uri' => config('services.oauth.redirect_uri'),
+        $clientId = config('services.oauth.client_id');
+        $clientSecret = config('services.oauth.client_secret');
+        $redirectUri = config('services.oauth.redirect_uri') ?: url('/oauth/callback');
+        $providerUrl = config('services.oauth.provider_url');
+        
+        // Log for debugging (remove sensitive data in production)
+        \Log::info('OAuth token exchange attempt', [
+            'client_id' => substr($clientId, 0, 10) . '...',
+            'redirect_uri' => $redirectUri,
+            'provider_url' => $providerUrl,
         ]);
         
+        // Try Basic Auth first (some providers like Laravel Passport require this)
+        $response = Http::withBasicAuth($clientId, $clientSecret)
+            ->asForm()
+            ->post($providerUrl . '/oauth/token', [
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'redirect_uri' => $redirectUri,
+            ]);
+        
+        // If Basic Auth fails, try form-based authentication
+        if (!$response->successful() && $response->status() === 401) {
+            \Log::info('Basic Auth failed, trying form-based authentication');
+            $response = Http::asForm()->post($providerUrl . '/oauth/token', [
+                'grant_type' => 'authorization_code',
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'code' => $code,
+                'redirect_uri' => $redirectUri,
+            ]);
+        }
+        
         if (!$response->successful()) {
-            return redirect('/login')->with('error', 'Failed to get access token: ' . $response->body());
+            $errorBody = $response->body();
+            $errorJson = $response->json();
+            
+            \Log::error('OAuth token exchange failed', [
+                'status' => $response->status(),
+                'error' => $errorJson['error'] ?? 'unknown',
+                'error_description' => $errorJson['error_description'] ?? $errorBody,
+            ]);
+            
+            $errorMessage = $errorJson['error_description'] ?? $errorJson['error'] ?? 'Failed to get access token';
+            return redirect('/login')->with('error', 'OAuth authentication failed: ' . $errorMessage);
         }
         
         $tokenData = $response->json();
