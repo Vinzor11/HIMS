@@ -74,46 +74,66 @@ class OAuthController extends Controller
         $clientSecret = config('services.oauth.client_secret');
         $redirectUri = config('services.oauth.redirect_uri') ?: url('/oauth/callback');
         $providerUrl = config('services.oauth.provider_url');
+        $tokenUrl = rtrim($providerUrl, '/') . '/oauth/token';
         
-        // Log for debugging (remove sensitive data in production)
+        // Log configuration (without secrets)
         \Log::info('OAuth token exchange attempt', [
-            'client_id' => substr($clientId, 0, 10) . '...',
+            'client_id_length' => strlen($clientId ?? ''),
+            'client_secret_length' => strlen($clientSecret ?? ''),
             'redirect_uri' => $redirectUri,
-            'provider_url' => $providerUrl,
+            'token_url' => $tokenUrl,
+            'code_length' => strlen($code ?? ''),
         ]);
         
-        // Try Basic Auth first (some providers like Laravel Passport require this)
-        $response = Http::withBasicAuth($clientId, $clientSecret)
-            ->asForm()
-            ->post($providerUrl . '/oauth/token', [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $redirectUri,
-            ]);
+        // Try form-based authentication first (most common)
+        \Log::info('Attempting form-based authentication');
+        $response = Http::asForm()->post($tokenUrl, [
+            'grant_type' => 'authorization_code',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'code' => $code,
+            'redirect_uri' => $redirectUri,
+        ]);
         
-        // If Basic Auth fails, try form-based authentication
-        if (!$response->successful() && $response->status() === 401) {
-            \Log::info('Basic Auth failed, trying form-based authentication');
-            $response = Http::asForm()->post($providerUrl . '/oauth/token', [
-                'grant_type' => 'authorization_code',
-                'client_id' => $clientId,
-                'client_secret' => $clientSecret,
-                'code' => $code,
-                'redirect_uri' => $redirectUri,
+        // If form-based fails with 401, try Basic Auth
+        if (!$response->successful() && ($response->status() === 401 || $response->status() === 400)) {
+            $errorJson = $response->json();
+            \Log::info('Form-based auth failed, trying Basic Auth', [
+                'status' => $response->status(),
+                'error' => $errorJson['error'] ?? 'unknown',
             ]);
+            
+            $response = Http::withBasicAuth($clientId, $clientSecret)
+                ->asForm()
+                ->post($tokenUrl, [
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                    'redirect_uri' => $redirectUri,
+                ]);
         }
         
         if (!$response->successful()) {
             $errorBody = $response->body();
             $errorJson = $response->json();
             
+            // Log detailed error information
             \Log::error('OAuth token exchange failed', [
                 'status' => $response->status(),
+                'headers' => $response->headers(),
                 'error' => $errorJson['error'] ?? 'unknown',
                 'error_description' => $errorJson['error_description'] ?? $errorBody,
+                'token_url' => $tokenUrl,
+                'redirect_uri' => $redirectUri,
+                'client_id_preview' => substr($clientId ?? '', 0, 10) . '...',
             ]);
             
             $errorMessage = $errorJson['error_description'] ?? $errorJson['error'] ?? 'Failed to get access token';
+            
+            // Provide more helpful error message
+            if (isset($errorJson['error']) && $errorJson['error'] === 'invalid_client') {
+                $errorMessage = 'Client authentication failed. Please verify OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET are correct in Railway variables.';
+            }
+            
             return redirect('/login')->with('error', 'OAuth authentication failed: ' . $errorMessage);
         }
         
