@@ -52,6 +52,9 @@ class FortifyServiceProvider extends ServiceProvider
             'canRegister' => Features::enabled(Features::registration()),
             'status' => $request->session()->get('status'),
             'error' => $request->session()->get('error'),
+            'oauthEnabled' => !empty(config('services.oauth.client_id')) && 
+                             !empty(config('services.oauth.client_secret')) &&
+                             !empty(config('services.oauth.provider_url')),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [

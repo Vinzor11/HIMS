@@ -19,19 +19,19 @@ class OAuthController extends Controller
         
         // Validate configuration
         if (!$clientId) {
-            return redirect('/login')->with('error', 'OAuth client ID is not configured. Please set OAUTH_CLIENT_ID in your .env file.');
+            return redirect('/login')->with('error', 'OAuth is not configured. Please contact your administrator.');
         }
         
         if (!$clientSecret) {
-            return redirect('/login')->with('error', 'OAuth client secret is not configured. Please set OAUTH_CLIENT_SECRET in your .env file.');
+            return redirect('/login')->with('error', 'OAuth is not configured. Please contact your administrator.');
         }
         
         if (!$redirectUri) {
-            return redirect('/login')->with('error', 'OAuth redirect URI is not configured. Please set OAUTH_REDIRECT_URI in your .env file.');
+            $redirectUri = url('/oauth/callback');
         }
         
         if (!$providerUrl) {
-            return redirect('/login')->with('error', 'OAuth provider URL is not configured. Please set OAUTH_PROVIDER_URL in your .env file.');
+            return redirect('/login')->with('error', 'OAuth is not configured. Please contact your administrator.');
         }
         
         $state = Str::random(40);

@@ -39,7 +39,7 @@ return [
         'provider_url' => env('OAUTH_PROVIDER_URL', 'http://localhost:8000'),
         'client_id' => env('OAUTH_CLIENT_ID'),
         'client_secret' => env('OAUTH_CLIENT_SECRET'),
-        'redirect_uri' => env('OAUTH_REDIRECT_URI', 'http://localhost:3001/oauth/callback'),
+        'redirect_uri' => env('OAUTH_REDIRECT_URI', env('APP_URL', 'http://localhost:8000').'/oauth/callback'),
     ],
 
 ];
