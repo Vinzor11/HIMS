@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\LogoutResponse;
 
 class OAuthController extends Controller
 {
@@ -174,10 +175,16 @@ class OAuthController extends Controller
         
         // Login
         Auth::login($user);
-        
+
+        // Store authentication method for logout handling
+        session([
+            'auth_method' => 'sso',
+            'hr_system_url' => $providerUrl,
+        ]);
+
         // Clear OAuth state
         session()->forget('oauth_state');
-        
+
         return redirect('/dashboard');
     }
 }

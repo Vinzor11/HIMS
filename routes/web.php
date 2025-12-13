@@ -17,6 +17,14 @@ Route::get('/oauth/redirect', [App\Http\Controllers\Auth\OAuthController::class,
 Route::get('/oauth/callback', [App\Http\Controllers\Auth\OAuthController::class, 'callback'])
     ->name('oauth.callback');
 
+// Logout routes
+Route::post('/logout', [App\Http\Controllers\Auth\LogoutController::class, 'logout'])
+    ->middleware(['auth'])
+    ->name('logout');
+
+Route::get('/logged-out', [App\Http\Controllers\Auth\LogoutController::class, 'handlePostLogout'])
+    ->name('logout.post');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
