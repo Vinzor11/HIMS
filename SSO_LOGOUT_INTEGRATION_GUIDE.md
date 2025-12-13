@@ -593,6 +593,22 @@ Solution: Ensure post-logout redirect doesn't trigger another logout
 Solution: Use window.location.href instead of fetch/XHR for redirects
 ```
 
+**Problem: SSO logout doesn't redirect back to app**
+```
+Solution: Ensure post_logout_redirect_uri is registered in HR system's OAuth client redirect URIs
+
+Required redirect URIs to register in HR system:
+- https://yourapp.com/logged-out (recommended)
+- https://yourapp.com/ (fallback option)
+- https://yourapp.com/login (alternative)
+
+Steps:
+1. Go to HR system OAuth clients page
+2. Edit your HIMS client
+3. Add the redirect URI to the "Redirect URIs" field
+4. Save the client configuration
+```
+
 **Problem: State parameter mismatch**
 ```
 Solution: Ensure state is stored in sessionStorage, not localStorage
