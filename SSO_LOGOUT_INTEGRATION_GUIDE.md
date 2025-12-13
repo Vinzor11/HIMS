@@ -445,6 +445,26 @@ function performSSOLogout() {
 - [ ] No sensitive data remains in storage
 - [ ] Browser back button doesn't restore session
 
+### Common SSO Logout Errors
+
+**Laravel Passport Type Error:**
+```
+Laravel\Passport\ClientRepository::findForUser(): Argument #2 ($user) must be of type Illuminate\Contracts\Auth\Authenticatable, int given
+```
+
+**Cause:** HR system's EndSessionController is passing user ID (integer) instead of User model to `findForUser()`
+
+**Solution:** Fix HR system's code:
+```php
+// WRONG - in EndSessionController.php
+$userId = $request->user()->id;
+$clients = $clientRepository->findForUser($clientId, $userId);
+
+// RIGHT - in EndSessionController.php
+$user = $request->user(); // or User::find($userId)
+$clients = $clientRepository->findForUser($clientId, $user);
+```
+
 ## 🚨 Error Handling & Fallbacks
 
 ### Network Failures
@@ -487,6 +507,19 @@ function performSSOLogout() {
             performDirectLogout();
         });
 }
+```
+
+### HR System Bugs
+```php
+// If HR system has bugs like:
+// Laravel\Passport\ClientRepository::findForUser(): Argument #2 ($user) must be of type
+// Illuminate\Contracts\Auth\Authenticatable, int given
+//
+// This indicates the HR system's EndSessionController is passing user ID instead of User model
+//
+// Fix needed in HR system's EndSessionController:
+// WRONG: ClientRepository::findForUser($clientId, $userId);
+// RIGHT: $user = User::find($userId); ClientRepository::findForUser($clientId, $user);
 ```
 
 ## 📊 Monitoring & Analytics

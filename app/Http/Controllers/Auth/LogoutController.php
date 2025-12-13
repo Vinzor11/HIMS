@@ -29,6 +29,10 @@ class LogoutController extends Controller
                 'redirect_uri' => config('app.url') . '/logged-out',
             ]);
 
+            // Note: If the HR system has bugs (like the Laravel Passport error where
+            // ClientRepository::findForUser() receives an int instead of Authenticatable),
+            // the redirect will fail. This needs to be fixed on the HR system side by
+            // ensuring proper user object resolution in their EndSessionController.
             return redirect($logoutUrl);
         } else {
             // Direct logout - redirect to login page
