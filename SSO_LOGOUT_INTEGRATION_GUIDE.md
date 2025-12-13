@@ -452,17 +452,20 @@ function performSSOLogout() {
 Laravel\Passport\ClientRepository::findForUser(): Argument #2 ($user) must be of type Illuminate\Contracts\Auth\Authenticatable, int given
 ```
 
-**Cause:** HR system's EndSessionController is passing user ID (integer) instead of User model to `findForUser()`
+**Cause:** HR system's EndSessionController is calling `findForUser(1, 100)` with hardcoded values instead of proper User object
 
-**Solution:** Fix HR system's code:
+**Solution:** Fix HR system's code at line 42:
 ```php
-// WRONG - in EndSessionController.php
-$userId = $request->user()->id;
-$clients = $clientRepository->findForUser($clientId, $userId);
+// WRONG - current buggy code in EndSessionController.php
+$client = $this->clients->findForUser(1, 100); // Get all clients
 
-// RIGHT - in EndSessionController.php
-$user = $request->user(); // or User::find($userId)
-$clients = $clientRepository->findForUser($clientId, $user);
+// RIGHT - fixed code in EndSessionController.php
+// Option 1: Get all clients (if they want to validate against all clients)
+$clients = $this->clients->all();
+
+// Option 2: Get user-specific clients
+$user = $request->user(); // Get authenticated user object
+$clients = $this->clients->findForUser(null, $user); // null = all clients for user
 ```
 
 ## 🚨 Error Handling & Fallbacks
