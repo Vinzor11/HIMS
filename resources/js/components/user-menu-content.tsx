@@ -11,6 +11,7 @@ import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { useState } from 'react';
 
 interface UserMenuContentProps {
     user: User;
@@ -18,10 +19,36 @@ interface UserMenuContentProps {
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const handleLogout = () => {
         cleanup();
-        router.flushAll();
+        setIsLoggingOut(true);
+
+        // Create and submit a form to avoid CORS issues with AJAX requests
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = logout().url;
+
+        // Add CSRF token for Laravel
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken.getAttribute('content') || '';
+            form.appendChild(csrfInput);
+        }
+
+        // Add method spoofing for DELETE if needed (but logout should be POST)
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'POST';
+        form.appendChild(methodInput);
+
+        document.body.appendChild(form);
+        form.submit();
     };
 
     return (
@@ -48,16 +75,15 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link
-                    className="block w-full"
-                    href={logout()}
-                    as="button"
+                <button
+                    className="block w-full text-left"
                     onClick={handleLogout}
+                    disabled={isLoggingOut}
                     data-test="logout-button"
                 >
-                    <LogOut className="mr-2" />
-                    Log out
-                </Link>
+                    <LogOut className="mr-2 inline" />
+                    {isLoggingOut ? 'Logging out...' : 'Log out'}
+                </button>
             </DropdownMenuItem>
         </>
     );
