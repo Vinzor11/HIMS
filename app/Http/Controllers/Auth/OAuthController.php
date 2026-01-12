@@ -177,9 +177,11 @@ class OAuthController extends Controller
         Auth::login($user);
 
         // Store authentication method for logout handling
+        // Store HR System access token for API calls
         session([
             'auth_method' => 'sso',
             'hr_system_url' => $providerUrl,
+            'hr_access_token' => $tokenData['access_token'],
         ]);
 
         // Clear OAuth state
