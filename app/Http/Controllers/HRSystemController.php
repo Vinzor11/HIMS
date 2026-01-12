@@ -48,13 +48,17 @@ class HRSystemController extends Controller
             } catch (\Exception $e) {
                 \Log::warning('Failed to fetch employee data', [
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
+                    'employeeId' => $data['employeeId'],
                 ]);
-                // Only add employee error if it's not a 404 (which might be expected)
-                if (!str_contains($e->getMessage(), 'Resource not found')) {
-                    $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee: ' . $e->getMessage();
+                // Provide helpful error message based on the error type
+                if (str_contains($e->getMessage(), 'Resource not found')) {
+                    if ($data['employeeId']) {
+                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . "Employee not found. Both /api/employees/me and /api/employees/{$data['employeeId']} returned 404.";
+                    } else {
+                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee endpoint not available. The /api/employees/me endpoint returned 404 and no employee_id was provided by OAuth.';
+                    }
                 } else {
-                    $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee endpoint not available. The /api/employees/me endpoint may not exist in the HR System API.';
+                    $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee: ' . $e->getMessage();
                 }
             }
 

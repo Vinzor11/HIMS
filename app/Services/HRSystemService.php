@@ -209,7 +209,13 @@ class HRSystemService
             ]);
             throw new \Exception('Failed to connect to HR System. Please try again later.');
         } catch (\Exception $e) {
-            if (str_contains($e->getMessage(), 'Access token not available')) {
+            // Don't wrap our own exceptions
+            if (str_contains($e->getMessage(), 'Access token not available') ||
+                str_contains($e->getMessage(), 'Resource not found') ||
+                str_contains($e->getMessage(), 'Authentication failed') ||
+                str_contains($e->getMessage(), 'Access denied') ||
+                str_contains($e->getMessage(), 'Rate limit exceeded') ||
+                str_contains($e->getMessage(), 'Failed to connect')) {
                 throw $e;
             }
             Log::error('HR System API error', [
