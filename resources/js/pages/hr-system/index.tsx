@@ -56,6 +56,9 @@ interface Employee {
         tin?: string;
         pagibig?: string;
     };
+    special_categories?: {
+        [key: string]: any;
+    };
 }
 
 interface Department {
@@ -316,12 +319,83 @@ export default function HRSystemIndex({
                                             </div>
                                         )}
                                     </div>
+                                    {/* Personal Information */}
+                                    {employee.personal && (
+                                        <div className="pt-4 border-t">
+                                            <p className="text-sm font-medium text-muted-foreground mb-2">
+                                                Personal Information
+                                            </p>
+                                            <div className="grid gap-2 md:grid-cols-3">
+                                                {employee.personal.birth_date && (
+                                                    <div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Birth Date:
+                                                        </span>{' '}
+                                                        <span className="text-sm">
+                                                            {new Date(
+                                                                employee.personal.birth_date
+                                                            ).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {employee.personal.gender && (
+                                                    <div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Gender:
+                                                        </span>{' '}
+                                                        <span className="text-sm">
+                                                            {employee.personal.gender}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {employee.personal.civil_status && (
+                                                    <div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Civil Status:
+                                                        </span>{' '}
+                                                        <span className="text-sm">
+                                                            {employee.personal.civil_status}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Address Information */}
+                                    {employee.address && (
+                                        <div className="pt-4 border-t">
+                                            <p className="text-sm font-medium text-muted-foreground mb-2">
+                                                Address Information
+                                            </p>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                {employee.address.present && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground mb-1">
+                                                            Present Address:
+                                                        </p>
+                                                        <p className="text-sm">{employee.address.present}</p>
+                                                    </div>
+                                                )}
+                                                {employee.address.permanent && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground mb-1">
+                                                            Permanent Address:
+                                                        </p>
+                                                        <p className="text-sm">{employee.address.permanent}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Government IDs */}
                                     {employee.government_ids && (
                                         <div className="pt-4 border-t">
                                             <p className="text-sm font-medium text-muted-foreground mb-2">
                                                 Government IDs
                                             </p>
-                                            <div className="grid gap-2 md:grid-cols-3">
+                                            <div className="grid gap-2 md:grid-cols-4">
                                                 {employee.government_ids.gsis && (
                                                     <div>
                                                         <span className="text-xs text-muted-foreground">
@@ -352,9 +426,43 @@ export default function HRSystemIndex({
                                                         </span>
                                                     </div>
                                                 )}
+                                                {employee.government_ids.pagibig && (
+                                                    <div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Pag-IBIG:
+                                                        </span>{' '}
+                                                        <span className="text-sm">
+                                                            {employee.government_ids.pagibig}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Special Categories */}
+                                    {employee.special_categories &&
+                                        Object.keys(employee.special_categories).length > 0 && (
+                                            <div className="pt-4 border-t">
+                                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                                    Special Categories
+                                                </p>
+                                                <div className="grid gap-2 md:grid-cols-2">
+                                                    {Object.entries(employee.special_categories).map(
+                                                        ([key, value]) => (
+                                                            <div key={key}>
+                                                                <span className="text-xs text-muted-foreground capitalize">
+                                                                    {key.replace(/_/g, ' ')}:
+                                                                </span>{' '}
+                                                                <span className="text-sm">
+                                                                    {String(value)}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                 </div>
                             ) : (
                                 <div className="space-y-2">
