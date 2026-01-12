@@ -82,6 +82,7 @@ interface Faculty {
 
 interface HRSystemIndexProps {
     hasAccessToken: boolean;
+    employeeId: string | null;
     employee: Employee | null;
     departments: { data: Department[]; count: number } | null;
     faculties: { data: Faculty[]; count: number } | null;
@@ -97,6 +98,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function HRSystemIndex({
     hasAccessToken,
+    employeeId,
     employee,
     departments,
     faculties,
@@ -189,6 +191,11 @@ export default function HRSystemIndex({
                         <h1 className="text-2xl font-semibold text-foreground">HR System Data</h1>
                         <p className="text-sm text-muted-foreground">
                             View employee, department, and faculty information from HR System
+                            {employeeId && (
+                                <span className="ml-2 text-xs">
+                                    (Employee ID: <code className="bg-muted px-1 rounded">{employeeId}</code>)
+                                </span>
+                            )}
                         </p>
                     </div>
                     <Button onClick={handleRefresh} disabled={isRefreshing}>

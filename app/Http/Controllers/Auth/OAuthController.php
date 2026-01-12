@@ -154,6 +154,11 @@ class OAuthController extends Controller
         
         $userInfo = $userResponse->json();
         
+        // Log the full userInfo for debugging
+        \Log::info('OAuth userinfo response', [
+            'userinfo' => $userInfo,
+        ]);
+        
         if (!isset($userInfo['email'])) {
             return redirect('/login')->with('error', 'User email not found in OAuth response');
         }
@@ -177,11 +182,12 @@ class OAuthController extends Controller
         Auth::login($user);
 
         // Store authentication method for logout handling
-        // Store HR System access token for API calls
+        // Store HR System access token and employee_id for API calls
         session([
             'auth_method' => 'sso',
             'hr_system_url' => $providerUrl,
             'hr_access_token' => $tokenData['access_token'],
+            'hr_employee_id' => $userInfo['employee_id'] ?? $tokenData['employee_id'] ?? null,
         ]);
 
         // Clear OAuth state

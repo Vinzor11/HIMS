@@ -23,11 +23,18 @@ class HRSystemController extends Controller
     {
         $data = [
             'hasAccessToken' => $this->hrSystemService->hasAccessToken(),
+            'employeeId' => $this->hrSystemService->getEmployeeId(),
             'employee' => null,
             'departments' => null,
             'faculties' => null,
             'error' => null,
         ];
+
+        // Log session data for debugging
+        \Log::info('HR System page loaded', [
+            'hasAccessToken' => $data['hasAccessToken'],
+            'employeeId' => $data['employeeId'],
+        ]);
 
         if (!$this->hrSystemService->hasAccessToken()) {
             $data['error'] = 'No access token found. Please authenticate with HR System first.';

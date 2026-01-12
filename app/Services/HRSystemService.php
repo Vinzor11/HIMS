@@ -10,11 +10,13 @@ class HRSystemService
 {
     private $baseUrl;
     private $accessToken;
+    private $employeeId;
 
     public function __construct()
     {
         $this->baseUrl = config('services.oauth.provider_url');
         $this->accessToken = Session::get('hr_access_token');
+        $this->employeeId = Session::get('hr_employee_id');
     }
 
     /**
@@ -43,11 +45,30 @@ class HRSystemService
     }
 
     /**
+     * Get the stored employee ID from OAuth
+     */
+    public function getEmployeeId()
+    {
+        return $this->employeeId;
+    }
+
+    /**
      * Get current employee data
+     * First tries /api/employees/me, then falls back to /api/employees/{id}
      */
     public function getCurrentEmployee()
     {
-        return $this->makeRequest('GET', '/api/employees/me');
+        // First, try the /api/employees/me endpoint
+        try {
+            return $this->makeRequest('GET', '/api/employees/me');
+        } catch (\Exception $e) {
+            // If /api/employees/me returns 404, try using the employee_id from OAuth
+            if (str_contains($e->getMessage(), 'Resource not found') && $this->employeeId) {
+                Log::info('Falling back to /api/employees/{id}', ['employee_id' => $this->employeeId]);
+                return $this->makeRequest('GET', "/api/employees/{$this->employeeId}");
+            }
+            throw $e;
+        }
     }
 
     /**
