@@ -211,10 +211,42 @@ const employee = await response.json();
     "code": "PROF",
     "name": "Professor"
   },
-  "personal": { ... },
-  "address": { ... },
-  "government_ids": { ... },
-  "special_categories": { ... }
+  "personal": {
+    "birth_date": "1985-05-15",
+    "gender": "Male",
+    "civil_status": "Married"
+  },
+  "address": {
+    "present": {
+      "house_no": "123",
+      "street": "Main Street",
+      "subdivision": "Green Valley",
+      "barangay": "Barangay 1",
+      "city": "Manila",
+      "province": "Metro Manila",
+      "zip_code": "1000"
+    },
+    "permanent": {
+      "house_no": "456",
+      "street": "Oak Avenue",
+      "subdivision": "Sunset Hills",
+      "barangay": "Barangay 2",
+      "city": "Quezon City",
+      "province": "Metro Manila",
+      "zip_code": "1100"
+    }
+  },
+  "government_ids": {
+    "gsis": "123456789",
+    "sss": "987654321",
+    "tin": "123-456-789-000",
+    "pagibig": "123456789012"
+  },
+  "special_categories": {
+    "pwd": false,
+    "senior_citizen": false,
+    "indigenous_people": false
+  }
 }
 ```
 
@@ -451,16 +483,58 @@ function EmployeeForm() {
       document.getElementById('mobile').value = employeeData.contact.mobile || '';
     }
     if (document.getElementById('birth_date')) {
-      document.getElementById('birth_date').value = employeeData.personal.birth_date;
+      document.getElementById('birth_date').value = employeeData.personal?.birth_date || '';
+    }
+    if (document.getElementById('gender')) {
+      document.getElementById('gender').value = employeeData.personal?.gender || '';
+    }
+    if (document.getElementById('civil_status')) {
+      document.getElementById('civil_status').value = employeeData.personal?.civil_status || '';
+    }
+    // Handle address - can be string or object
+    if (document.getElementById('present_address') && employeeData.address?.present) {
+      if (typeof employeeData.address.present === 'object') {
+        const addr = employeeData.address.present;
+        document.getElementById('present_address').value = [
+          addr.house_no,
+          addr.street,
+          addr.subdivision,
+          addr.barangay,
+          addr.city,
+          addr.province,
+          addr.zip_code
+        ].filter(Boolean).join(', ');
+      } else {
+        document.getElementById('present_address').value = employeeData.address.present;
+      }
+    }
+    if (document.getElementById('permanent_address') && employeeData.address?.permanent) {
+      if (typeof employeeData.address.permanent === 'object') {
+        const addr = employeeData.address.permanent;
+        document.getElementById('permanent_address').value = [
+          addr.house_no,
+          addr.street,
+          addr.subdivision,
+          addr.barangay,
+          addr.city,
+          addr.province,
+          addr.zip_code
+        ].filter(Boolean).join(', ');
+      } else {
+        document.getElementById('permanent_address').value = employeeData.address.permanent;
+      }
     }
     if (document.getElementById('gsis')) {
-      document.getElementById('gsis').value = employeeData.government_ids.gsis || '';
+      document.getElementById('gsis').value = employeeData.government_ids?.gsis || '';
     }
     if (document.getElementById('sss')) {
-      document.getElementById('sss').value = employeeData.government_ids.sss || '';
+      document.getElementById('sss').value = employeeData.government_ids?.sss || '';
     }
     if (document.getElementById('tin')) {
-      document.getElementById('tin').value = employeeData.government_ids.tin || '';
+      document.getElementById('tin').value = employeeData.government_ids?.tin || '';
+    }
+    if (document.getElementById('pagibig')) {
+      document.getElementById('pagibig').value = employeeData.government_ids?.pagibig || '';
     }
     // ... fill more fields as needed
   };
@@ -1112,7 +1186,51 @@ For additional support or questions:
    - API questions
 3. Review server logs for detailed error messages
 
+## Data Structure Reference
+
+### Employee Object Structure
+
+The employee object returned by `/api/employees/me` and `/api/employees/{id}` contains the following structure:
+
+#### Personal Information (`personal`)
+- `birth_date` (string, format: YYYY-MM-DD): Employee's date of birth
+- `gender` (string): Employee's gender
+- `civil_status` (string): Employee's civil status (e.g., "Single", "Married", "Divorced", "Widowed")
+
+#### Address Information (`address`)
+The address field can be either a string or an object. When it's an object, it contains:
+
+**Present Address (`address.present`):**
+- `house_no` (string, optional): House number
+- `street` (string, optional): Street name
+- `subdivision` (string, optional): Subdivision name
+- `barangay` (string, optional): Barangay name
+- `city` (string, optional): City name
+- `province` (string, optional): Province name
+- `zip_code` (string, optional): ZIP code
+
+**Permanent Address (`address.permanent`):**
+- Same structure as present address
+
+**Note:** Address fields may also be returned as simple strings. Always check the type before accessing object properties.
+
+#### Government IDs (`government_ids`)
+- `gsis` (string, optional): GSIS number
+- `sss` (string, optional): SSS number
+- `tin` (string, optional): TIN number
+- `pagibig` (string, optional): Pag-IBIG number
+
+#### Special Categories (`special_categories`)
+An object containing various special category flags (e.g., `pwd`, `senior_citizen`, `indigenous_people`). The exact fields depend on the HR System configuration.
+
 ## Changelog
+
+- **v1.0.1** (Updated)
+  - Documented complete employee data structure
+  - Added address object structure documentation
+  - Added personal information fields
+  - Added all government ID fields including Pag-IBIG
+  - Added special categories documentation
 
 - **v1.0.0** (Initial Release)
   - Employee endpoints
