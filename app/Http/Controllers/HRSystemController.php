@@ -44,18 +44,24 @@ class HRSystemController extends Controller
         try {
             // Fetch all data - catch individual errors so we can still show partial data
             try {
+                \Log::info('Attempting to fetch employee data', [
+                    'hasEmployeeId' => !empty($data['employeeId']),
+                    'employeeId' => $data['employeeId'],
+                ]);
                 $data['employee'] = $this->hrSystemService->getCurrentEmployee();
+                \Log::info('Successfully fetched employee data');
             } catch (\Exception $e) {
                 \Log::warning('Failed to fetch employee data', [
                     'error' => $e->getMessage(),
                     'employeeId' => $data['employeeId'],
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 // Provide helpful error message based on the error type
-                if (str_contains($e->getMessage(), 'Resource not found')) {
+                if (str_contains($e->getMessage(), 'Resource not found') || str_contains($e->getMessage(), '404')) {
                     if ($data['employeeId']) {
-                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . "Employee not found. Both /api/employees/me and /api/employees/{$data['employeeId']} returned 404.";
+                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . "Employee not found. Both /api/employees/me and /api/employees/{$data['employeeId']} returned 404. Please check the Laravel logs for detailed error information.";
                     } else {
-                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee endpoint not available. The /api/employees/me endpoint returned 404 and no employee_id was provided by OAuth.';
+                        $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee endpoint not available. The /api/employees/me endpoint returned 404 and no employee_id was provided by OAuth. Please check the Laravel logs for detailed error information.';
                     }
                 } else {
                     $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee: ' . $e->getMessage();

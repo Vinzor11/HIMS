@@ -59,13 +59,31 @@ class HRSystemService
     public function getCurrentEmployee()
     {
         // First, try the /api/employees/me endpoint
+        Log::info('Attempting to fetch employee via /api/employees/me');
         try {
-            return $this->makeRequest('GET', '/api/employees/me');
+            $result = $this->makeRequest('GET', '/api/employees/me');
+            Log::info('Successfully fetched employee via /api/employees/me');
+            return $result;
         } catch (\Exception $e) {
+            Log::warning('Failed to fetch employee via /api/employees/me', [
+                'error' => $e->getMessage(),
+                'employeeId' => $this->employeeId,
+            ]);
+            
             // If /api/employees/me returns 404, try using the employee_id from OAuth
-            if (str_contains($e->getMessage(), 'Resource not found') && $this->employeeId) {
+            if ((str_contains($e->getMessage(), 'Resource not found') || str_contains($e->getMessage(), '404')) && $this->employeeId) {
                 Log::info('Falling back to /api/employees/{id}', ['employee_id' => $this->employeeId]);
-                return $this->makeRequest('GET', "/api/employees/{$this->employeeId}");
+                try {
+                    $result = $this->makeRequest('GET', "/api/employees/{$this->employeeId}");
+                    Log::info('Successfully fetched employee via /api/employees/{id}', ['employee_id' => $this->employeeId]);
+                    return $result;
+                } catch (\Exception $fallbackException) {
+                    Log::error('Fallback to /api/employees/{id} also failed', [
+                        'employee_id' => $this->employeeId,
+                        'error' => $fallbackException->getMessage(),
+                    ]);
+                    throw $fallbackException;
+                }
             }
             throw $e;
         }
@@ -140,7 +158,11 @@ class HRSystemService
         try {
             $http = Http::withToken($this->accessToken)
                 ->acceptJson()
-                ->timeout(30);
+                ->timeout(30)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ]);
             
             // Handle different HTTP methods
             switch (strtoupper($method)) {
@@ -167,6 +189,17 @@ class HRSystemService
                 return $response->json();
             }
 
+            // Log full response details for debugging
+            Log::warning('HR System API request failed', [
+                'method' => $method,
+                'url' => $url,
+                'endpoint' => $endpoint,
+                'status' => $response->status(),
+                'headers' => $response->headers(),
+                'body' => $response->body(),
+                'json' => $response->json(),
+            ]);
+
             // Handle specific error cases
             if ($response->status() === 401) {
                 // Token expired or invalid
@@ -179,12 +212,9 @@ class HRSystemService
             }
 
             if ($response->status() === 404) {
-                Log::warning('HR System API resource not found', [
-                    'method' => $method,
-                    'url' => $url,
-                    'endpoint' => $endpoint,
-                ]);
-                throw new \Exception("Resource not found at endpoint: {$endpoint}. The API endpoint may not exist or the resource may not be available.");
+                $errorBody = $response->json();
+                $errorMessage = $errorBody['message'] ?? $errorBody['error'] ?? "Resource not found at endpoint: {$endpoint}";
+                throw new \Exception($errorMessage);
             }
 
             if ($response->status() === 429) {
