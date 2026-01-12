@@ -110,6 +110,12 @@ class HRSystemService
 
         $url = rtrim($this->baseUrl, '/') . $endpoint;
 
+        Log::info('HR System API request', [
+            'method' => $method,
+            'url' => $url,
+            'endpoint' => $endpoint,
+        ]);
+
         try {
             $http = Http::withToken($this->accessToken)
                 ->acceptJson()
@@ -152,7 +158,12 @@ class HRSystemService
             }
 
             if ($response->status() === 404) {
-                throw new \Exception('Resource not found.');
+                Log::warning('HR System API resource not found', [
+                    'method' => $method,
+                    'url' => $url,
+                    'endpoint' => $endpoint,
+                ]);
+                throw new \Exception("Resource not found at endpoint: {$endpoint}. The API endpoint may not exist or the resource may not be available.");
             }
 
             if ($response->status() === 429) {

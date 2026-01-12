@@ -139,7 +139,8 @@ export default function HRSystemIndex({
         );
     }
 
-    if (error) {
+    // Show error card only if we have no data at all
+    if (error && !employee && !departments && !faculties) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="HR System Data" />
@@ -153,12 +154,25 @@ export default function HRSystemIndex({
                             <CardDescription>{error}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button onClick={handleRefresh} disabled={isRefreshing}>
-                                <RefreshCw
-                                    className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                                />
-                                Retry
-                            </Button>
+                            <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">
+                                    This error may occur if:
+                                </p>
+                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                    <li>The HR System API endpoint does not exist</li>
+                                    <li>The access token has expired or is invalid</li>
+                                    <li>You don't have permission to access the resource</li>
+                                    <li>The HR System is temporarily unavailable</li>
+                                </ul>
+                                <div className="pt-4">
+                                    <Button onClick={handleRefresh} disabled={isRefreshing}>
+                                        <RefreshCw
+                                            className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        />
+                                        Retry
+                                    </Button>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -184,6 +198,23 @@ export default function HRSystemIndex({
                         Refresh Data
                     </Button>
                 </div>
+
+                {/* Show error banner if there are partial errors */}
+                {error && (employee || departments || faculties) && (
+                    <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                <CardTitle className="text-yellow-800 dark:text-yellow-200">
+                                    Partial Data Loaded
+                                </CardTitle>
+                            </div>
+                            <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                                {error}
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+                )}
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {/* Employee Card */}
