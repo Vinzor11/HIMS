@@ -106,14 +106,10 @@ export default function HRSystemIndex({
 
     const handleRefresh = () => {
         setIsRefreshing(true);
-        router.post(
-            '/hr-system/refresh',
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => setIsRefreshing(false),
-            }
-        );
+        router.reload({
+            preserveScroll: true,
+            onFinish: () => setIsRefreshing(false),
+        });
     };
 
     if (!hasAccessToken) {

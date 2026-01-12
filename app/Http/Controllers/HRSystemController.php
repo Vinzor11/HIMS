@@ -35,11 +35,30 @@ class HRSystemController extends Controller
         }
 
         try {
-            // Fetch all data
-            $data['employee'] = $this->hrSystemService->getCurrentEmployee();
-            $data['departments'] = $this->hrSystemService->getDepartments();
-            $data['faculties'] = $this->hrSystemService->getFaculties();
+            // Fetch all data - catch individual errors so we can still show partial data
+            try {
+                $data['employee'] = $this->hrSystemService->getCurrentEmployee();
+            } catch (\Exception $e) {
+                \Log::warning('Failed to fetch employee data', ['error' => $e->getMessage()]);
+                $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Employee: ' . $e->getMessage();
+            }
+
+            try {
+                $data['departments'] = $this->hrSystemService->getDepartments();
+            } catch (\Exception $e) {
+                \Log::warning('Failed to fetch departments data', ['error' => $e->getMessage()]);
+                $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Departments: ' . $e->getMessage();
+            }
+
+            try {
+                $data['faculties'] = $this->hrSystemService->getFaculties();
+            } catch (\Exception $e) {
+                \Log::warning('Failed to fetch faculties data', ['error' => $e->getMessage()]);
+                $data['error'] = ($data['error'] ? $data['error'] . ' ' : '') . 'Faculties: ' . $e->getMessage();
+            }
         } catch (\Exception $e) {
+            // Fallback error handling
+            \Log::error('Unexpected error in HR System index', ['error' => $e->getMessage()]);
             $data['error'] = $e->getMessage();
         }
 
@@ -130,18 +149,10 @@ class HRSystemController extends Controller
     /**
      * Refresh data
      */
-    public function refresh()
+    public function refresh(Request $request)
     {
-        try {
-            $data = [
-                'employee' => $this->hrSystemService->getCurrentEmployee(),
-                'departments' => $this->hrSystemService->getDepartments(),
-                'faculties' => $this->hrSystemService->getFaculties(),
-            ];
-            return response()->json($data);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        // Redirect back to index which will reload all data
+        return redirect()->route('hr-system.index');
     }
 }
 
