@@ -47,8 +47,24 @@ interface Employee {
         civil_status?: string;
     };
     address?: {
-        present?: string;
-        permanent?: string;
+        present?: string | {
+            house_no?: string;
+            street?: string;
+            subdivision?: string;
+            barangay?: string;
+            city?: string;
+            province?: string;
+            zip_code?: string;
+        };
+        permanent?: string | {
+            house_no?: string;
+            street?: string;
+            subdivision?: string;
+            barangay?: string;
+            city?: string;
+            province?: string;
+            zip_code?: string;
+        };
     };
     government_ids?: {
         gsis?: string;
@@ -374,7 +390,33 @@ export default function HRSystemIndex({
                                                         <p className="text-xs text-muted-foreground mb-1">
                                                             Present Address:
                                                         </p>
-                                                        <p className="text-sm">{employee.address.present}</p>
+                                                        {typeof employee.address.present === 'string' ? (
+                                                            <p className="text-sm">{employee.address.present}</p>
+                                                        ) : (
+                                                            <div className="text-sm space-y-1">
+                                                                {employee.address.present.house_no && (
+                                                                    <p>{employee.address.present.house_no}</p>
+                                                                )}
+                                                                {employee.address.present.street && (
+                                                                    <p>{employee.address.present.street}</p>
+                                                                )}
+                                                                {employee.address.present.subdivision && (
+                                                                    <p>{employee.address.present.subdivision}</p>
+                                                                )}
+                                                                {employee.address.present.barangay && (
+                                                                    <p>{employee.address.present.barangay}</p>
+                                                                )}
+                                                                <p>
+                                                                    {[
+                                                                        employee.address.present.city,
+                                                                        employee.address.present.province,
+                                                                        employee.address.present.zip_code,
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(', ')}
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                                 {employee.address.permanent && (
@@ -382,7 +424,33 @@ export default function HRSystemIndex({
                                                         <p className="text-xs text-muted-foreground mb-1">
                                                             Permanent Address:
                                                         </p>
-                                                        <p className="text-sm">{employee.address.permanent}</p>
+                                                        {typeof employee.address.permanent === 'string' ? (
+                                                            <p className="text-sm">{employee.address.permanent}</p>
+                                                        ) : (
+                                                            <div className="text-sm space-y-1">
+                                                                {employee.address.permanent.house_no && (
+                                                                    <p>{employee.address.permanent.house_no}</p>
+                                                                )}
+                                                                {employee.address.permanent.street && (
+                                                                    <p>{employee.address.permanent.street}</p>
+                                                                )}
+                                                                {employee.address.permanent.subdivision && (
+                                                                    <p>{employee.address.permanent.subdivision}</p>
+                                                                )}
+                                                                {employee.address.permanent.barangay && (
+                                                                    <p>{employee.address.permanent.barangay}</p>
+                                                                )}
+                                                                <p>
+                                                                    {[
+                                                                        employee.address.permanent.city,
+                                                                        employee.address.permanent.province,
+                                                                        employee.address.permanent.zip_code,
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(', ')}
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
