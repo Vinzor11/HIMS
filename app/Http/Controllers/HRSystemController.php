@@ -117,6 +117,28 @@ class HRSystemController extends Controller
     }
 
     /**
+     * Get all employees with pagination
+     */
+    public function getEmployees(Request $request)
+    {
+        try {
+            $page = (int) $request->query('page', 1);
+            $perPage = (int) $request->query('per_page', 50);
+            $status = $request->query('status', 'active');
+            
+            // Validate status
+            if (!in_array($status, ['active', 'inactive', 'all'])) {
+                $status = 'active';
+            }
+            
+            $employees = $this->hrSystemService->getAllEmployees($page, $perPage, $status);
+            return response()->json($employees);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get departments
      */
     public function getDepartments(Request $request)

@@ -37,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // HR System API routes
     Route::prefix('hr-system')->name('hr-system.')->group(function () {
         Route::get('/', [\App\Http\Controllers\HRSystemController::class, 'index'])->name('index');
+        Route::get('/employees', [\App\Http\Controllers\HRSystemController::class, 'getEmployees'])->name('employees.index');
         Route::get('/employee/me', [\App\Http\Controllers\HRSystemController::class, 'getCurrentEmployee'])->name('employee.me');
         Route::get('/employee/{employeeId}', [\App\Http\Controllers\HRSystemController::class, 'getEmployee'])->name('employee.show');
         Route::get('/departments', [\App\Http\Controllers\HRSystemController::class, 'getDepartments'])->name('departments.index');

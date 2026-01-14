@@ -98,6 +98,30 @@ class HRSystemService
     }
 
     /**
+     * Get all employees with pagination and status filtering
+     * 
+     * @param int $page Page number (default: 1)
+     * @param int $perPage Number of items per page (default: 50, max: 100)
+     * @param string $status Filter by status: 'active', 'inactive', or 'all' (default: 'active')
+     * @return array Response with data, meta, and links
+     */
+    public function getAllEmployees($page = 1, $perPage = 50, $status = 'active')
+    {
+        // Validate per_page (max 100)
+        $perPage = min($perPage, 100);
+        
+        // Build query parameters
+        $params = [
+            'page' => $page,
+            'per_page' => $perPage,
+            'status' => $status,
+        ];
+        
+        $url = '/api/employees?' . http_build_query($params);
+        return $this->makeRequest('GET', $url);
+    }
+
+    /**
      * Get all departments
      */
     public function getDepartments($type = null)
