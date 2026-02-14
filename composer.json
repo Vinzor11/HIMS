@@ -13,6 +13,7 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9"
     },
@@ -43,7 +44,21 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
+            "@php artisan db:seed --force",
             "npm install",
+            "npm run build"
+        ],
+        "deploy": [
+            "composer install --no-dev --optimize-autoloader",
+            "@php artisan migrate --force",
+            "@php artisan db:seed --class=Database\\Seeders\\ProductSeeder --force",
+            "@php artisan db:seed --class=Database\\Seeders\\AgriculturalProductsSeeder --force",
+            "@php artisan storage:link",
+            "@php artisan db:seed --class=Database\\Seeders\\ProductImageSeeder --force",
+            "@php artisan config:cache",
+            "@php artisan route:cache",
+            "@php artisan view:cache",
+            "npm ci --production",
             "npm run build"
         ],
         "dev": [
